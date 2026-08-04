@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route } from 'react-router-dom'
 
 import Home from './pages/Home'
 import CreateCrawl from './pages/CreateCrawl'
@@ -8,7 +8,7 @@ import ActiveCrawl from './pages/ActiveCrawl'
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<Home />} />
 
@@ -19,7 +19,7 @@ function App() {
         <Route path="/crawl/:id" element={<LiveCrawl />} />
         <Route path="/crawl/:id/active" element={<ActiveCrawl />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 
