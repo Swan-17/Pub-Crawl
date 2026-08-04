@@ -5,10 +5,15 @@ function CreateCrawl() {
   const [crawlName, setCrawlName] = useState('')
   const [location, setLocation] = useState('')
   const [numberOfPubs, setNumberOfPubs] = useState(5)
-  const [created, setCreated] = useState(false)
+  const [crawlCode, setCrawlCode] = useState('')
 
-  function handleCreateCrawl() {
-    setCreated(true)
+  function generateCode() {
+    const code = Math.random()
+      .toString(36)
+      .substring(2, 8)
+      .toUpperCase()
+
+    setCrawlCode(code)
   }
 
   return (
@@ -59,47 +64,41 @@ function CreateCrawl() {
 
       <br /><br />
 
-      <button onClick={handleCreateCrawl}>
+      <button onClick={generateCode}>
         Create Crawl
       </button>
 
-      <hr />
-
-      <h3>Current Details</h3>
-
-      <p>
-        Crawl name: {crawlName}
-      </p>
-
-      <p>
-        Starting location: {location}
-      </p>
-
-      <p>
-        Number of pubs: {numberOfPubs}
-      </p>
-
-      {created && (
+      {crawlCode && (
         <div>
+          <hr />
+
           <h2>
             Crawl created! 🎉
           </h2>
 
           <p>
-            Your crawl "{crawlName}" has been planned.
+            Crawl name: {crawlName}
           </p>
 
           <p>
-            Starting at: {location}
+            Starting location: {location}
           </p>
 
           <p>
             Pubs planned: {numberOfPubs}
           </p>
+
+          <h3>
+            Invite Code:
+          </h3>
+
+          <strong>
+            {crawlCode}
+          </strong>
         </div>
       )}
 
-      <br />
+      <br /><br />
 
       <Link to="/">
         Back Home
@@ -108,4 +107,5 @@ function CreateCrawl() {
   )
 }
 
-export default CreateCrawl 
+export default CreateCrawl
+ 

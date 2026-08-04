@@ -6,7 +6,7 @@ function JoinCrawl() {
       <h1>Join Crawl 🔑</h1>
 
       <p>
-        Enter your crawl code to join your friends. with test
+        Enter your crawl code to join your friends.
       </p>
 
       <Link to="/">
@@ -17,3 +17,4 @@ function JoinCrawl() {
 }
 
 export default JoinCrawl
+ 
