@@ -1,203 +1,531 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+
 import { searchLocation } from '../services/locationSearch'
+import { searchNearbyPubs } from '../services/pubSearch'
+import { saveCrawl } from '../services/crawlStorage'
+
 import type { Location } from '../types/location'
+import type { Pub } from '../types/pub'
+
 import MapView from '../components/MapView'
+
 
 
 function CreateCrawl() {
 
-  const [crawlName, setCrawlName] = useState('')
-  const [numberOfPubs, setNumberOfPubs] = useState(5)
 
-  const [locationInput, setLocationInput] = useState('')
-  const [selectedLocation, setSelectedLocation] =
+  const navigate = useNavigate()
+
+
+
+  const [crawlName,setCrawlName] =
+
+    useState('')
+
+
+
+  const [locationInput,setLocationInput] =
+
+    useState('')
+
+
+
+  const [selectedLocation,setSelectedLocation] =
+
     useState<Location | null>(null)
 
-  const [crawlCode, setCrawlCode] = useState('')
+
+
+  const [nearbyPubs,setNearbyPubs] =
+
+    useState<Pub[]>([])
+
+
+
+  const [selectedPubs,setSelectedPubs] =
+
+    useState<Pub[]>([])
+
+
+
+  const [loadingPubs,setLoadingPubs] =
+
+    useState(false)
+
+
+
+
+
+  async function loadPubs(location:Location) {
+
+
+    try {
+
+
+      setLoadingPubs(true)
+
+
+
+      const pubs =
+
+        await searchNearbyPubs(
+
+          location.latitude,
+
+          location.longitude
+
+        )
+
+
+
+      setNearbyPubs(pubs)
+
+
+    }
+
+    catch(error) {
+
+
+      console.error(error)
+
+      alert(
+        'Unable to load pubs'
+      )
+
+
+    }
+
+    finally {
+
+
+      setLoadingPubs(false)
+
+
+    }
+
+
+  }
+
+
+
+
 
 
   async function handleSearchLocation() {
 
-    if (!locationInput) {
-      alert('Please enter a location')
-      return
-    }
 
-    const result = await searchLocation(locationInput)
+    const result =
 
-    if (result) {
+      await searchLocation(
 
-      setSelectedLocation({
+        locationInput
+
+      )
+
+
+
+    if(result) {
+
+
+      const location: Location = {
+
+
         ...result,
-        source: 'search'
-      })
 
-    } else {
 
-      alert('Location not found')
+        source:'search'
+
+
+      }
+
+
+
+      setSelectedLocation(location)
+
+
+      loadPubs(location)
+
 
     }
+
+    else {
+
+
+      alert(
+        'Location not found'
+      )
+
+
+    }
+
 
   }
+
+
+
+
 
 
   function useCurrentLocation() {
 
+
     navigator.geolocation.getCurrentPosition(
 
-      (position) => {
 
-        setSelectedLocation({
+      position=>{
 
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          name: 'Current location',
-          source: 'gps'
 
-        })
+        const location:Location = {
+
+
+          latitude:
+
+            position.coords.latitude,
+
+
+          longitude:
+
+            position.coords.longitude,
+
+
+          name:
+
+            'Current location',
+
+
+          source:
+
+            'gps'
+
+
+        }
+
+
+
+
+
+        setSelectedLocation(location)
+
+
+        loadPubs(location)
+
 
       },
 
-      () => {
 
-        alert('Unable to access your location')
+
+      ()=>{
+
+
+        alert(
+
+          'Unable to get your location'
+
+        )
+
 
       }
 
+
     )
 
+
   }
+
+
+
+
+
+
+
+
+  function addPub(pub:Pub) {
+
+
+    const exists =
+
+      selectedPubs.some(
+
+        item =>
+
+          item.id === pub.id
+
+      )
+
+
+
+    if(!exists) {
+
+
+      setSelectedPubs([
+
+        ...selectedPubs,
+
+        pub
+
+      ])
+
+
+    }
+
+
+  }
+
+
+
+
+
+
+
+  function removePub(id:string) {
+
+
+    setSelectedPubs(
+
+      selectedPubs.filter(
+
+        pub =>
+
+          pub.id !== id
+
+      )
+
+    )
+
+
+  }
+
+
+
+
+
 
 
   function createCrawl() {
 
-    const code =
-      Math.random()
-        .toString(36)
-        .substring(2, 8)
-        .toUpperCase()
 
-    setCrawlCode(code)
+    if(selectedPubs.length < 2) {
+
+
+      alert(
+
+        'Please add at least 2 pubs'
+
+      )
+
+
+      return
+
+
+    }
+
+
+
+
+
+    const code =
+
+      Math.random()
+
+      .toString(36)
+
+      .substring(2,8)
+
+      .toUpperCase()
+
+
+
+
+
+    const hostId =
+
+      crypto.randomUUID()
+
+
+
+
+
+    const crawlPubs =
+
+      selectedPubs.map(pub => ({
+
+
+        ...pub,
+
+
+        visited:false,
+
+
+        visitedBy:[],
+
+
+        photos:[],
+
+
+        comments:[]
+
+
+      }))
+
+
+
+
+
+    saveCrawl({
+
+
+      code,
+
+
+
+      name:
+
+        crawlName || 'My Pub Crawl',
+
+
+
+      status:
+
+        'lobby',
+
+
+
+      hostId,
+
+
+
+      createdAt:
+
+        new Date().toISOString(),
+
+
+
+      participants:[
+
+
+        {
+
+
+          id:
+
+            hostId,
+
+
+          name:
+
+            'Host',
+
+
+          joinedAt:
+
+            new Date().toISOString(),
+
+
+          latitude:null,
+
+
+          longitude:null,
+
+
+          isHost:true
+
+
+        }
+
+
+      ],
+
+
+
+      pubs:
+
+        crawlPubs
+
+
+    })
+
+
+
+
+
+    navigate(
+
+      `/crawl/${code}`
+
+    )
+
 
   }
 
 
+
+
+
+
+
+
   return (
+
 
     <div style={styles.container}>
 
 
-      <h1>
-        🍻 Create Pub Crawl
-      </h1>
+      <div style={styles.counter}>
 
 
-      <p>
-        Plan your route, choose pubs and invite friends.
-      </p>
+        <h3>
 
+          🍻 My Crawl
 
-
-      <div style={styles.card}>
-
-        <h2>
-          Crawl Details
-        </h2>
-
-
-        <input
-          style={styles.input}
-          placeholder="Crawl name"
-          value={crawlName}
-          onChange={(e) =>
-            setCrawlName(e.target.value)
-          }
-        />
-
-
-        <input
-          style={styles.input}
-          type="number"
-          min="1"
-          placeholder="Number of pubs"
-          value={numberOfPubs}
-          onChange={(e) =>
-            setNumberOfPubs(
-              Number(e.target.value)
-            )
-          }
-        />
-
-
-      </div>
+        </h3>
 
 
 
+        <strong>
 
-      <div style={styles.card}>
+          {selectedPubs.length} pubs
 
-        <h2>
-          📍 Starting Point
-        </h2>
-
-
-        <input
-          style={styles.input}
-          placeholder="City, postcode or address"
-          value={locationInput}
-          onChange={(e) =>
-            setLocationInput(
-              e.target.value
-            )
-          }
-        />
+        </strong>
 
 
-        <button
-          style={styles.button}
-          onClick={handleSearchLocation}
-        >
-          Search Location
-        </button>
-
-
-        <button
-          style={styles.darkButton}
-          onClick={useCurrentLocation}
-        >
-          📍 Use My Location
-        </button>
 
 
 
         {
-          selectedLocation && (
 
-            <div>
-
-              <div style={styles.locationBox}>
-
-                <h3>
-                  {selectedLocation.name}
-                </h3>
+          selectedPubs.map(pub => (
 
 
-                <p>
-                  Location selected
-                </p>
+            <div
+
+              key={pub.id}
+
+              style={styles.counterPub}
+
+            >
 
 
-              </div>
+              {pub.name}
 
 
-              <MapView
-                location={selectedLocation}
-              />
+
+              <button
+
+                onClick={()=>removePub(pub.id)}
+
+              >
+
+                ✕
+
+              </button>
+
 
             </div>
 
-          )
+
+          ))
+
         }
 
 
@@ -206,154 +534,488 @@ function CreateCrawl() {
 
 
 
+
+
+
+      <h1>
+
+        🍻 Create Crawl
+
+      </h1>
+
+
+
+
+
+
+      <input
+
+        style={styles.input}
+
+        placeholder="Crawl name"
+
+        value={crawlName}
+
+        onChange={e=>
+
+          setCrawlName(
+
+            e.target.value
+
+          )
+
+        }
+
+      />
+
+
+
+
+
+
+
+      <input
+
+        style={styles.input}
+
+        placeholder="City, postcode or address"
+
+        value={locationInput}
+
+        onChange={e=>
+
+          setLocationInput(
+
+            e.target.value
+
+          )
+
+        }
+
+      />
+
+
+
+
+
+
       <button
-        style={styles.createButton}
-        onClick={createCrawl}
+
+        style={styles.button}
+
+        onClick={handleSearchLocation}
+
       >
-        Create Crawl 🍺
+
+        Search Location
+
       </button>
 
 
 
 
+
+
+
+      <br/><br/>
+
+
+
+
+
+
+      <button
+
+        style={styles.secondaryButton}
+
+        onClick={useCurrentLocation}
+
+      >
+
+        📍 Use My Location
+
+      </button>
+
+
+
+
+
+
+
+
       {
-        crawlCode && (
 
-          <div style={styles.card}>
-
-            <h2>
-              Crawl Created 🎉
-            </h2>
+        selectedLocation &&
 
 
-            <p>
-              Share this code with your friends:
-            </p>
+        <MapView
 
 
-            <h1>
-              {crawlCode}
-            </h1>
+          location={selectedLocation}
 
 
-            <Link
-              to={`/crawl/${crawlCode}`}
-            >
-              Open Crawl
-            </Link>
+          pubs={nearbyPubs}
 
 
-          </div>
+          selectedPubs={selectedPubs}
 
-        )
+
+          onAddPub={addPub}
+
+
+        />
+
+
       }
 
 
 
-      <br />
+
+
+
+
+
+
+      {
+
+        loadingPubs &&
+
+
+        <p>
+
+          Finding pubs...
+
+        </p>
+
+
+      }
+
+
+
+
+
+
+
+
+
+      {
+
+        nearbyPubs.length > 0 &&
+
+
+        <div style={styles.card}>
+
+
+          <h3>
+
+            Recommended Pubs
+
+          </h3>
+
+
+
+
+
+          {
+
+            nearbyPubs.map(pub => (
+
+
+              <div
+
+                key={pub.id}
+
+                style={styles.pub}
+
+              >
+
+
+                <strong>
+
+                  {pub.name}
+
+                </strong>
+
+
+
+                <p>
+
+                  ⭐ {pub.rating}
+
+                </p>
+
+
+
+
+
+                <button
+
+                  style={styles.button}
+
+                  onClick={()=>addPub(pub)}
+
+                >
+
+
+                  {
+
+                    selectedPubs.some(
+
+                      item =>
+
+                        item.id === pub.id
+
+                    )
+
+                    ? '✓ Added'
+
+                    : '+ Add to Crawl'
+
+
+                  }
+
+
+                </button>
+
+
+              </div>
+
+
+            ))
+
+          }
+
+
+        </div>
+
+
+      }
+
+
+
+
+
+
+
+
+      <button
+
+        style={styles.button}
+
+        onClick={createCrawl}
+
+      >
+
+        Create Crawl ({selectedPubs.length} pubs)
+
+      </button>
+
+
+
+
+
+
+
+
+      <br/><br/>
+
+
+
+
 
 
       <Link to="/">
-        ← Back Home
+
+        Back Home
+
       </Link>
 
 
     </div>
 
+
   )
 
+
 }
+
+
+
+
 
 
 
 const styles = {
 
-  container: {
 
-    maxWidth: '900px',
-    margin: '0 auto',
-    padding: '40px',
-    textAlign: 'center' as const
+  container:{
+
+
+    textAlign:'center' as const,
+
+
+    padding:'40px'
+
 
   },
 
 
-  card: {
 
-    background: '#ffffff',
-    padding: '25px',
-    margin: '25px 0',
-    borderRadius: '16px',
-    boxShadow:
-      '0 4px 15px rgba(0,0,0,0.12)'
+  counter:{
+
+
+    position:'fixed' as const,
+
+
+    right:'20px',
+
+
+    top:'120px',
+
+
+    width:'220px',
+
+
+    background:'white',
+
+
+    padding:'20px',
+
+
+    border:'1px solid #ddd',
+
+
+    borderRadius:'12px',
+
+
+    zIndex:1000
+
 
   },
 
 
-  input: {
 
-    display: 'block',
-    width: '80%',
-    maxWidth: '400px',
-    margin: '15px auto',
-    padding: '14px',
-    borderRadius: '8px',
-    border: '1px solid #ccc',
-    fontSize: '16px'
+  counterPub:{
+
+
+    fontSize:'12px',
+
+
+    margin:'8px'
+
 
   },
 
 
-  button: {
 
-    padding: '12px 20px',
-    margin: '8px',
-    background: '#1f7a4d',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer'
+  input:{
+
+
+    display:'block',
+
+
+    margin:'15px auto',
+
+
+    padding:'12px',
+
+
+    width:'300px'
+
 
   },
 
 
-  darkButton: {
 
-    padding: '12px 20px',
-    margin: '8px',
-    background: '#333',
-    color: 'white',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer'
+  button:{
+
+
+    padding:'10px 20px',
+
+
+    background:'#1f7a4d',
+
+
+    color:'white',
+
+
+    border:'none',
+
+
+    borderRadius:'8px',
+
+
+    cursor:'pointer'
+
 
   },
 
 
-  createButton: {
 
-    padding: '16px 35px',
-    background: '#d97706',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    fontSize: '18px',
-    cursor: 'pointer'
+  secondaryButton:{
+
+
+    padding:'10px 20px',
+
+
+    background:'#444',
+
+
+    color:'white',
+
+
+    border:'none',
+
+
+    borderRadius:'8px'
+
 
   },
 
 
-  locationBox: {
 
-    margin: '20px',
-    padding: '15px',
-    borderRadius: '10px',
-    background: '#f3f4f6'
+  card:{
+
+
+    margin:'25px auto',
+
+
+    padding:'20px',
+
+
+    maxWidth:'500px',
+
+
+    border:'1px solid #ddd',
+
+
+    borderRadius:'12px'
+
+
+  },
+
+
+
+  pub:{
+
+
+    padding:'15px',
+
+
+    margin:'10px',
+
+
+    border:'1px solid #ddd',
+
+
+    borderRadius:'8px'
+
 
   }
+
 
 }
 
 
+
 export default CreateCrawl
- 

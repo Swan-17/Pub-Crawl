@@ -2,5 +2,5 @@ export interface Location {
   latitude: number
   longitude: number
   name?: string
-  source?: 'search' | 'gps'
+  source?: 'search' | 'gps' | 'crawl'
 }
