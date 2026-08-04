@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 function Home() {
   return (
     <div>
@@ -7,13 +9,15 @@ function Home() {
         Plan the perfect pub crawl with your friends.
       </p>
 
-      <button>
+      <Link to="/create">
         Create Crawl
-      </button>
+      </Link>
 
-      <button>
+      <br />
+
+      <Link to="/join">
         Join Crawl
-      </button>
+      </Link>
     </div>
   )
 }
