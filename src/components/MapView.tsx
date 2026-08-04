@@ -1,4 +1,9 @@
 import {
+  useEffect,
+  useState
+} from 'react'
+
+import {
   GoogleMap,
   Marker,
   useJsApiLoader
@@ -20,17 +25,7 @@ interface Props {
 
   onAddPub?: (pub: Pub) => void
 
-}
-
-
-
-const containerStyle = {
-
-  width:'100%',
-
-  height:'500px',
-
-  borderRadius:'12px'
+  showNumberedMarkers?: boolean
 
 }
 
@@ -44,11 +39,38 @@ function MapView({
 
   selectedPubs = [],
 
-  onAddPub
+  onAddPub,
+
+  showNumberedMarkers = false
 
 }: Props) {
 
 
+
+  const [activePubId,setActivePubId] = useState<string | null>(null)
+  const [isMobile,setIsMobile] = useState(
+    typeof window !== 'undefined' && window.innerWidth <= 768
+  )
+
+  useEffect(() => {
+    const updateViewport = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+
+    updateViewport()
+    window.addEventListener('resize', updateViewport)
+
+    return () => {
+      window.removeEventListener('resize', updateViewport)
+    }
+  }, [])
+
+  const containerStyle = {
+    width:'100%',
+    height:isMobile ? '320px' : '420px',
+    maxWidth:'100%',
+    borderRadius:'12px'
+  }
 
   const { isLoaded } = useJsApiLoader({
 
@@ -126,7 +148,7 @@ function MapView({
 
       {
 
-        pubs.map((pub)=>(
+        pubs.map((pub, index)=>(
 
           <PubMarker
 
@@ -136,6 +158,15 @@ function MapView({
 
             pub={pub}
 
+            order={index}
+
+            showNumberedMarker={showNumberedMarkers}
+
+            isOpen={activePubId === pub.id}
+
+            onOpen={(pubId) => setActivePubId(pubId)}
+
+            onClose={() => setActivePubId(null)}
 
             isSelected={
 

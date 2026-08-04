@@ -124,7 +124,7 @@ router.get("/", async (req, res) => {
 
           "X-Goog-FieldMask":
 
-            "places.id,places.displayName,places.location,places.rating"
+            "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.regularOpeningHours,places.types,places.websiteUri"
 
 
         },
@@ -280,6 +280,14 @@ router.get("/", async (req, res) => {
 
 
 
+        address:
+
+          place.formattedAddress ||
+
+          "",
+
+
+
         latitude:
 
           place.location.latitude,
@@ -294,7 +302,31 @@ router.get("/", async (req, res) => {
 
         rating:
 
-          place.rating || null
+          place.rating || null,
+
+
+
+        reviewCount:
+
+          place.userRatingCount || null,
+
+
+
+        openingHours:
+
+          place.regularOpeningHours?.weekdayDescriptions || [],
+
+
+
+        website:
+
+          place.websiteUri || null,
+
+
+
+        types:
+
+          place.types || []
 
 
 

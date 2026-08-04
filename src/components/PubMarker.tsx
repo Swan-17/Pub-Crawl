@@ -3,10 +3,6 @@ import {
   InfoWindow
 } from '@react-google-maps/api'
 
-import {
-  useState
-} from 'react'
-
 import type { Pub } from '../types/pub'
 
 
@@ -15,7 +11,17 @@ interface Props {
 
   pub: Pub
 
+  order?: number
+
+  showNumberedMarker?: boolean
+
   isSelected?: boolean
+
+  isOpen?: boolean
+
+  onOpen?: (pubId: string) => void
+
+  onClose?: () => void
 
   onAddPub?: (pub: Pub) => void
 
@@ -27,14 +33,32 @@ function PubMarker({
 
   pub,
 
+  order = 0,
+
+  showNumberedMarker = false,
+
   isSelected = false,
+
+  isOpen = false,
+
+  onOpen,
+
+  onClose,
 
   onAddPub
 
 }: Props) {
 
 
-  const [open,setOpen] = useState(false)
+  const today = new Date().getDay()
+
+  const todayIndex = today === 0 ? 6 : today - 1
+
+  const todayHours =
+
+    pub.openingHours?.[todayIndex] ||
+    pub.openingHours?.[0] ||
+    'Opening hours unavailable'
 
 
 
@@ -52,9 +76,9 @@ function PubMarker({
 
         }}
 
-        onClick={()=>setOpen(true)}
+        onClick={() => onOpen?.(pub.id)}
 
-        label="🍺"
+        label={showNumberedMarker ? String(order + 1) : undefined}
 
       />
 
@@ -63,7 +87,7 @@ function PubMarker({
       {
 
 
-        open && (
+        isOpen && (
 
 
           <InfoWindow
@@ -76,7 +100,7 @@ function PubMarker({
 
             }}
 
-            onCloseClick={()=>setOpen(false)}
+            onCloseClick={() => onClose?.()}
 
           >
 
@@ -111,24 +135,6 @@ function PubMarker({
 
               {
 
-                pub.reviewCount && (
-
-                  <p>
-
-                    Reviews: {pub.reviewCount}
-
-                  </p>
-
-                )
-
-              }
-
-
-
-
-
-              {
-
                 pub.openingHours &&
 
                 pub.openingHours.length > 0 &&
@@ -139,19 +145,48 @@ function PubMarker({
 
                     <strong>
 
-                      Opening hours
+                      Opening hours for today
 
                     </strong>
 
 
                     <p>
 
-                      {pub.openingHours[0]}
+                      {todayHours}
 
                     </p>
 
 
                   </div>
+
+                )
+
+              }
+
+
+
+
+              {
+
+                pub.website && (
+
+                  <p>
+
+                    <a
+
+                      href={pub.website}
+
+                      target="_blank"
+
+                      rel="noreferrer"
+
+                    >
+
+                      Visit website
+
+                    </a>
+
+                  </p>
 
                 )
 

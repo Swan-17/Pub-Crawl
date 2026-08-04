@@ -4,6 +4,7 @@ import Home from './pages/Home'
 import CreateCrawl from './pages/CreateCrawl'
 import JoinCrawl from './pages/JoinCrawl'
 import LiveCrawl from './pages/LiveCrawl'
+import ActiveCrawl from './pages/ActiveCrawl'
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/join" element={<JoinCrawl />} />
 
         <Route path="/crawl/:id" element={<LiveCrawl />} />
+        <Route path="/crawl/:id/active" element={<ActiveCrawl />} />
       </Routes>
     </BrowserRouter>
   )

@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 
 import {
@@ -21,7 +21,9 @@ import {
 import MapView from '../components/MapView'
 
 import {
-  getCrawl
+  getCrawl,
+  saveCrawl,
+  startCrawl
 } from '../services/crawlStorage'
 
 import type { Pub } from '../types/pub'
@@ -147,7 +149,7 @@ function SortablePub({
 
       <p>
 
-        ⭐ {pub.rating}
+        ⭐ {pub.rating ?? 'N/A'}
 
       </p>
 
@@ -158,6 +160,34 @@ function SortablePub({
         {pub.address}
 
       </p>
+
+
+
+      {
+
+        pub.website && (
+
+          <p>
+
+            <a
+
+              href={pub.website}
+
+              target="_blank"
+
+              rel="noreferrer"
+
+            >
+
+              Visit website
+
+            </a>
+
+          </p>
+
+        )
+
+      }
 
 
     </div>
@@ -178,6 +208,7 @@ function LiveCrawl() {
 
 
   const { id } = useParams()
+  const navigate = useNavigate()
 
 
 
@@ -204,6 +235,8 @@ function LiveCrawl() {
 
     )
 
+  const [localOrder, setLocalOrder] = useState<Pub[]>(crawl?.pubs || [])
+
 
 
 
@@ -223,9 +256,9 @@ function LiveCrawl() {
         </h1>
 
 
-        <Link to="/">
+        <Link to="/create">
 
-          Back Home
+          Back to Create Crawl
 
         </Link>
 
@@ -242,7 +275,7 @@ function LiveCrawl() {
 
 
 
-  function handleDragEnd(event:any) {
+  function handleDragEnd(event: any) {
 
 
     const {
@@ -286,7 +319,7 @@ function LiveCrawl() {
 
 
 
-        return arrayMove(
+        const reordered = arrayMove(
 
           items,
 
@@ -294,7 +327,11 @@ function LiveCrawl() {
 
           newIndex
 
-        )
+        ) as Pub[]
+
+        setLocalOrder(reordered)
+
+        return reordered
 
 
       })
@@ -308,6 +345,32 @@ function LiveCrawl() {
 
 
 
+
+
+  function handleStartCrawl() {
+    if (!crawl || !id) {
+      return
+    }
+
+    const updatedCrawl = getCrawl(id)
+
+    if (!updatedCrawl) {
+      return
+    }
+
+    updatedCrawl.pubs = localOrder.map((pub) => ({
+      ...pub,
+      visited: false,
+      visitedBy: [],
+      photos: [],
+      comments: []
+    }))
+
+    saveCrawl(updatedCrawl)
+    startCrawl(id)
+
+    navigate(`/crawl/${id}/active`)
+  }
 
 
   const startLocation:Location = {
@@ -343,7 +406,7 @@ function LiveCrawl() {
   return (
 
 
-    <div style={styles.container}>
+    <div style={styles.container} className="live-crawl-page">
 
 
       <h1>
@@ -387,6 +450,8 @@ function LiveCrawl() {
 
 
         pubs={pubs}
+
+        showNumberedMarkers={true}
 
 
       />
@@ -474,11 +539,15 @@ function LiveCrawl() {
 
 
 
-      <Link to="/">
+      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <button style={styles.button} onClick={handleStartCrawl}>
+          Start Crawl
+        </button>
 
-        Back Home
-
-      </Link>
+        <Link to="/create">
+          Back to Create Crawl
+        </Link>
+      </div>
 
 
     </div>
@@ -500,8 +569,21 @@ const styles = {
 
     textAlign:'center' as const,
 
-    padding:'40px'
+    padding:'40px',
 
+    maxWidth:'1100px',
+
+    margin:'0 auto'
+
+  },
+
+  button:{
+    padding:'10px 20px',
+    background:'#1f7a4d',
+    color:'white',
+    border:'none',
+    borderRadius:'8px',
+    cursor:'pointer'
   },
 
 

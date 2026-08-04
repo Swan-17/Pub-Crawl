@@ -23,7 +23,7 @@ async function searchNearbyPubs(latitude, longitude) {
         'X-Goog-Api-Key': GOOGLE_API_KEY,
 
         'X-Goog-FieldMask':
-          'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.regularOpeningHours,places.types'
+          'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.regularOpeningHours,places.types,places.websiteUri'
 
       },
 
@@ -129,6 +129,11 @@ async function searchNearbyPubs(latitude, longitude) {
       rating:
 
         place.rating ?? null,
+
+
+      website:
+
+        place.websiteUri ?? null,
 
 
       reviewCount:

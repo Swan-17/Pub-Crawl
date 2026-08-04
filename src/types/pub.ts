@@ -8,4 +8,5 @@ export interface Pub {
   reviewCount?: number
   openingHours?: string[]
   photoUrl?: string
+  website?: string
 }

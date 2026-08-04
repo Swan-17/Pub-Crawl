@@ -1,8 +1,89 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
+  background: #f8f8f8;
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
   box-sizing: border-box;
+}
+
+button,
+input,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.create-crawl-page,
+.live-crawl-page,
+.active-crawl-page {
+  width: 100%;
+}
+
+.create-input,
+.create-cta {
+  max-width: 100%;
+}
+
+button {
+  min-height: 44px;
+}
+
+input {
+  min-height: 44px;
+}
+
+@media (max-width: 768px) {
+  .create-crawl-page,
+  .live-crawl-page,
+  .active-crawl-page {
+    padding: 14px 14px 28px !important;
+  }
+
+  .crawl-counter {
+    position: sticky !important;
+    top: 12px !important;
+    width: 100% !important;
+    margin: 0 0 20px 0 !important;
+    right: auto !important;
+  }
+
+  .create-crawl-page input,
+  .create-crawl-page button,
+  .live-crawl-page button,
+  .active-crawl-page button,
+  .active-crawl-page input {
+    width: 100%;
+  }
+
+  .create-crawl-page .create-cta,
+  .live-crawl-page button,
+  .active-crawl-page button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .create-crawl-page .create-input,
+  .create-crawl-page .create-cta {
+    width: 100%;
+  }
+
+  .active-crawl-page details,
+  .live-crawl-page .card,
+  .create-crawl-page .card {
+    width: 100%;
+  }
 }

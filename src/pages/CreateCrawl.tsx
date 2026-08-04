@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { searchLocation } from '../services/locationSearch'
@@ -11,6 +11,54 @@ import type { Pub } from '../types/pub'
 import MapView from '../components/MapView'
 
 
+const DRAFT_KEY = 'pub-crawl-create-draft'
+
+
+type DraftState = {
+  crawlName: string
+  locationInput: string
+  selectedLocation: Location | null
+  nearbyPubs: Pub[]
+  selectedPubs: Pub[]
+}
+
+
+function loadDraft(): DraftState {
+  if (typeof window === 'undefined') {
+    return {
+      crawlName: '',
+      locationInput: '',
+      selectedLocation: null,
+      nearbyPubs: [],
+      selectedPubs: []
+    }
+  }
+
+  const raw = window.localStorage.getItem(DRAFT_KEY)
+
+  if (!raw) {
+    return {
+      crawlName: '',
+      locationInput: '',
+      selectedLocation: null,
+      nearbyPubs: [],
+      selectedPubs: []
+    }
+  }
+
+  try {
+    return JSON.parse(raw) as DraftState
+  } catch {
+    return {
+      crawlName: '',
+      locationInput: '',
+      selectedLocation: null,
+      nearbyPubs: [],
+      selectedPubs: []
+    }
+  }
+}
+
 
 function CreateCrawl() {
 
@@ -19,33 +67,35 @@ function CreateCrawl() {
 
 
 
+  const draft = loadDraft()
+
   const [crawlName,setCrawlName] =
 
-    useState('')
+    useState(draft.crawlName)
 
 
 
   const [locationInput,setLocationInput] =
 
-    useState('')
+    useState(draft.locationInput)
 
 
 
   const [selectedLocation,setSelectedLocation] =
 
-    useState<Location | null>(null)
+    useState<Location | null>(draft.selectedLocation)
 
 
 
   const [nearbyPubs,setNearbyPubs] =
 
-    useState<Pub[]>([])
+    useState<Pub[]>(draft.nearbyPubs)
 
 
 
   const [selectedPubs,setSelectedPubs] =
 
-    useState<Pub[]>([])
+    useState<Pub[]>(draft.selectedPubs)
 
 
 
@@ -53,6 +103,35 @@ function CreateCrawl() {
 
     useState(false)
 
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      DRAFT_KEY,
+      JSON.stringify({
+        crawlName,
+        locationInput,
+        selectedLocation,
+        nearbyPubs,
+        selectedPubs
+      })
+    )
+  }, [crawlName, locationInput, selectedLocation, nearbyPubs, selectedPubs])
+
+
+
+
+
+  const recommendedPubs =
+
+    [...nearbyPubs]
+
+      .sort((a,b)=>
+
+        (b.rating ?? 0) - (a.rating ?? 0)
+
+      )
+
+      .slice(0,5)
 
 
 
@@ -468,10 +547,10 @@ function CreateCrawl() {
   return (
 
 
-    <div style={styles.container}>
+    <div style={styles.container} className="create-crawl-page">
 
 
-      <div style={styles.counter}>
+      <div style={styles.counter} className="crawl-counter">
 
 
         <h3>
@@ -511,13 +590,12 @@ function CreateCrawl() {
 
 
               <button
-
-                onClick={()=>removePub(pub.id)}
-
+                type="button"
+                onClick={() => removePub(pub.id)}
+                style={{ minHeight: '40px' }}
+                aria-label={`Remove ${pub.name}`}
               >
-
                 ✕
-
               </button>
 
 
@@ -551,6 +629,7 @@ function CreateCrawl() {
       <input
 
         style={styles.input}
+        className="create-input"
 
         placeholder="Crawl name"
 
@@ -577,6 +656,7 @@ function CreateCrawl() {
       <input
 
         style={styles.input}
+        className="create-input"
 
         placeholder="City, postcode or address"
 
@@ -602,6 +682,7 @@ function CreateCrawl() {
       <button
 
         style={styles.button}
+        className="create-input"
 
         onClick={handleSearchLocation}
 
@@ -627,6 +708,7 @@ function CreateCrawl() {
       <button
 
         style={styles.secondaryButton}
+        className="create-input"
 
         onClick={useCurrentLocation}
 
@@ -678,6 +760,29 @@ function CreateCrawl() {
 
       {
 
+        selectedLocation &&
+
+
+        <button
+
+          style={styles.button}
+          className="create-cta"
+
+          onClick={createCrawl}
+
+        >
+
+          Create Crawl ({selectedPubs.length} pubs)
+
+        </button>
+
+
+      }
+
+
+
+      {
+
         loadingPubs &&
 
 
@@ -700,7 +805,7 @@ function CreateCrawl() {
 
       {
 
-        nearbyPubs.length > 0 &&
+        recommendedPubs.length > 0 &&
 
 
         <div style={styles.card}>
@@ -718,7 +823,7 @@ function CreateCrawl() {
 
           {
 
-            nearbyPubs.map(pub => (
+            recommendedPubs.map(pub => (
 
 
               <div
@@ -791,39 +896,7 @@ function CreateCrawl() {
 
       }
 
-
-
-
-
-
-
-
-      <button
-
-        style={styles.button}
-
-        onClick={createCrawl}
-
-      >
-
-        Create Crawl ({selectedPubs.length} pubs)
-
-      </button>
-
-
-
-
-
-
-
-
       <br/><br/>
-
-
-
-
-
-
       <Link to="/">
 
         Back Home
@@ -854,7 +927,13 @@ const styles = {
     textAlign:'center' as const,
 
 
-    padding:'40px'
+    padding:'40px',
+
+
+    maxWidth:'1100px',
+
+
+    margin:'0 auto'
 
 
   },
@@ -888,7 +967,10 @@ const styles = {
     borderRadius:'12px',
 
 
-    zIndex:1000
+    zIndex:1000,
+
+
+    maxWidth:'calc(100vw - 40px)'
 
 
   },
@@ -920,7 +1002,7 @@ const styles = {
     padding:'12px',
 
 
-    width:'300px'
+    width:'min(100%, 300px)'
 
 
   },
@@ -984,6 +1066,9 @@ const styles = {
 
 
     maxWidth:'500px',
+
+
+    width:'100%',
 
 
     border:'1px solid #ddd',
